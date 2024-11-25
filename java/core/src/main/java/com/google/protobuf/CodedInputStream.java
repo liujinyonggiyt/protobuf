@@ -810,20 +810,21 @@ public abstract class CodedInputStream {
 
     @Override
     public String readStringRequireUtf8() throws IOException {
-      final int size = readRawVarint32();
-      if (size > 0 && size <= (limit - pos)) {
-        String result = Utf8.decodeUtf8(buffer, pos, size);
-        pos += size;
-        return result;
-      }
-
-      if (size == 0) {
-        return "";
-      }
-      if (size <= 0) {
-        throw InvalidProtocolBufferException.negativeSize();
-      }
-      throw InvalidProtocolBufferException.truncatedMessage();
+      return readString();
+//      final int size = readRawVarint32();
+//      if (size > 0 && size <= (limit - pos)) {
+//        String result = Utf8.decodeUtf8(buffer, pos, size);
+//        pos += size;
+//        return result;
+//      }
+//
+//      if (size == 0) {
+//        return "";
+//      }
+//      if (size <= 0) {
+//        throw InvalidProtocolBufferException.negativeSize();
+//      }
+//      throw InvalidProtocolBufferException.truncatedMessage();
     }
 
     @Override
