@@ -7,7 +7,7 @@
     <version>3.21.12</version>
   </parent>
 
-  <artifactId>protobuf-java</artifactId>
+  <artifactId>animal-protobuf-java</artifactId>
   <packaging>bundle</packaging>
 
   <name>Protocol Buffers [Core]</name>

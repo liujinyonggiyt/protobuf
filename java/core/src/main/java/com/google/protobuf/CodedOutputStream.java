@@ -38,6 +38,7 @@ import static java.lang.Math.max;
 
 import com.google.protobuf.Utf8.UnpairedSurrogateException;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.UnpooledHeapByteBuf;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -141,7 +142,7 @@ public abstract class CodedOutputStream extends ByteOutput {
     throw new IllegalArgumentException("ByteBuffer is read-only");
   }
   /** Create a new {@code CodedOutputStream} that writes to the given {@link ByteBuf}. */
-  public static CodedOutputStream newInstance(ByteBuf buffer) {
+  public static CodedOutputStream newInstance(UnpooledHeapByteBuf buffer) {
     return new ByteBufEncoder(buffer);
   }
 
@@ -1859,10 +1860,10 @@ public abstract class CodedOutputStream extends ByteOutput {
    */
   private static final class ByteBufEncoder extends CodedOutputStream {
 //    private final ByteBuf originalBuffer;
-    private final ByteBuf buffer;
+    private final UnpooledHeapByteBuf buffer;
     private final int initWriterIndex;
 
-    ByteBufEncoder(ByteBuf buffer) {
+    ByteBufEncoder(UnpooledHeapByteBuf buffer) {
 //      this.originalBuffer = buffer;
 //      this.buffer = buffer.duplicate().order(ByteOrder.LITTLE_ENDIAN);
       this.buffer = buffer;
@@ -2027,21 +2028,56 @@ public abstract class CodedOutputStream extends ByteOutput {
       }
     }
 
+//    @Override
+//    public void writeUInt32NoTag(int value) throws IOException {
+//      try {
+//        buffer.ensureWritable(MAX_VARINT32_SIZE);// 5 bytes is the max size of an int32
+//        int writeIndex = buffer.writerIndex();
+//        if(buffer.hasArray()){
+//          byte[] bytes = buffer.array();
+//          while (true) {
+//            if ((value & ~0x7F) == 0) {
+//              bytes[writeIndex++] = (byte) value;
+//              break;
+//            } else {
+//              bytes[writeIndex++] = (byte) ((value & 0x7F) | 0x80);
+//              value >>>= 7;
+//            }
+//          }
+//        }else{
+//          while (true) {
+//            if ((value & ~0x7F) == 0) {
+//
+//              buffer.setByte(writeIndex++, (byte) value);
+//              break;
+//            } else {
+//              buffer.setByte(writeIndex++, (byte) ((value & 0x7F) | 0x80));
+//              value >>>= 7;
+//            }
+//          }
+//        }
+//
+//        buffer.writerIndex(writeIndex);
+//      } catch (BufferOverflowException e) {
+//        throw new OutOfSpaceException(e);
+//      }
+//    }
     @Override
     public void writeUInt32NoTag(int value) throws IOException {
-      try {
-        while (true) {
-          if ((value & ~0x7F) == 0) {
-            buffer.writeByte((byte) value);
-            return;
-          } else {
-            buffer.writeByte((byte) ((value & 0x7F) | 0x80));
-            value >>>= 7;
+        buffer.ensureWritable(MAX_VARINT32_SIZE);// 5 bytes is the max size of an int32
+        int writeIndex = buffer.writerIndex();
+          byte[] bytes = buffer.array();
+          while (true) {
+            if ((value & ~0x7F) == 0) {
+              bytes[writeIndex++] = (byte) value;
+              break;
+            } else {
+              bytes[writeIndex++] = (byte) ((value & 0x7F) | 0x80);
+              value >>>= 7;
+            }
           }
-        }
-      } catch (BufferOverflowException e) {
-        throw new OutOfSpaceException(e);
-      }
+
+        buffer.writerIndex(writeIndex);
     }
 
     @Override
