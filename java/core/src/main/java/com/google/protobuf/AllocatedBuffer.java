@@ -40,7 +40,8 @@ import java.nio.ByteBuffer;
  */
 @CheckReturnValue
 @ExperimentalApi
-abstract class AllocatedBuffer {
+public abstract class AllocatedBuffer {
+  public abstract void clear();
   /**
    * Indicates whether this buffer contains a backing {@link ByteBuffer} (i.e. it is safe to call
    * {@link #nioBuffer()}).
@@ -158,6 +159,11 @@ abstract class AllocatedBuffer {
     return new AllocatedBuffer() {
 
       @Override
+      public void clear() {
+        buffer.clear();
+      }
+
+      @Override
       public boolean hasNioBuffer() {
         return true;
       }
@@ -210,6 +216,11 @@ abstract class AllocatedBuffer {
     return new AllocatedBuffer() {
       // Relative to offset.
       private int position;
+
+      @Override
+      public void clear() {
+        position = 0;
+      }
 
       @Override
       public boolean hasNioBuffer() {

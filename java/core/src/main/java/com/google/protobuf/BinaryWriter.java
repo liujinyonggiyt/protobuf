@@ -67,7 +67,7 @@ import java.util.Queue;
  */
 @CheckReturnValue
 @ExperimentalApi
-abstract class BinaryWriter extends ByteOutput implements Writer {
+public abstract class BinaryWriter extends ByteOutput implements Writer {
   public static final int DEFAULT_CHUNK_SIZE = 4096;
 
   private final BufferAllocator alloc;
@@ -173,30 +173,54 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
   public final void writeSFixed32(int fieldNumber, int value) throws IOException {
     writeFixed32(fieldNumber, value);
   }
+  @Override
+  public final void writeSFixed32NoTag(int value) throws IOException {
+    writeFixed32NoTag(value);
+  }
 
   @Override
   public final void writeInt64(int fieldNumber, long value) throws IOException {
     writeUInt64(fieldNumber, value);
+  }
+  @Override
+  public final void writeInt64NoTag(long value) throws IOException {
+    writeUInt64NoTag(value);
   }
 
   @Override
   public final void writeSFixed64(int fieldNumber, long value) throws IOException {
     writeFixed64(fieldNumber, value);
   }
+  @Override
+  public final void writeSFixed64NoTag(long value) throws IOException {
+    writeFixed64NoTag(value);
+  }
 
   @Override
   public final void writeFloat(int fieldNumber, float value) throws IOException {
     writeFixed32(fieldNumber, Float.floatToRawIntBits(value));
+  }
+  @Override
+  public final void writeFloatNoTag(float value) throws IOException {
+    writeFixed32NoTag(Float.floatToRawIntBits(value));
   }
 
   @Override
   public final void writeDouble(int fieldNumber, double value) throws IOException {
     writeFixed64(fieldNumber, Double.doubleToRawLongBits(value));
   }
+  @Override
+  public final void writeDoubleNoTag(double value) throws IOException {
+    writeFixed64NoTag(Double.doubleToRawLongBits(value));
+  }
 
   @Override
   public final void writeEnum(int fieldNumber, int value) throws IOException {
     writeInt32(fieldNumber, value);
+  }
+  @Override
+  public final void writeEnumNoTag(int value) throws IOException {
+    writeInt32NoTag(value);
   }
 
   @Override
@@ -861,6 +885,16 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
    */
   public abstract int getTotalBytesWritten();
 
+  /**
+   * 调用此方法前，需要先调用{@link #finishCurrentBuffer()}
+   */
+  public void clear(){
+    this.totalDoneBytes = 0;
+    while (this.buffers.size()>1){
+      this.buffers.peekLast();
+    }
+  }
+
   abstract void requireSpace(int size);
 
   abstract void finishCurrentBuffer();
@@ -990,12 +1024,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeVarint32(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
     }
+    @Override
+    public void writeUInt32NoTag(int value) throws IOException {
+      requireSpace(MAX_VARINT32_SIZE * 2);
+      writeVarint32(value);
+    }
 
     @Override
     public void writeInt32(int fieldNumber, int value) throws IOException {
       requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
       writeInt32(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
+    }
+    @Override
+    public void writeInt32NoTag(int value) throws IOException {
+      requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
+      writeInt32(value);
     }
 
     @Override
@@ -1004,12 +1048,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeSInt32(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
     }
+    @Override
+    public void writeSInt32NoTag(int value) throws IOException {
+      requireSpace(MAX_VARINT32_SIZE * 2);
+      writeSInt32(value);
+    }
 
     @Override
     public void writeFixed32(int fieldNumber, int value) throws IOException {
       requireSpace(MAX_VARINT32_SIZE + FIXED32_SIZE);
       writeFixed32(value);
       writeTag(fieldNumber, WIRETYPE_FIXED32);
+    }
+    @Override
+    public void writeFixed32NoTag(int value) throws IOException {
+      requireSpace(MAX_VARINT32_SIZE + FIXED32_SIZE);
+      writeFixed32(value);
     }
 
     @Override
@@ -1018,12 +1072,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeVarint64(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
     }
+    @Override
+    public void writeUInt64NoTag(long value) throws IOException {
+      requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
+      writeVarint64(value);
+    }
 
     @Override
     public void writeSInt64(int fieldNumber, long value) throws IOException {
       requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
       writeSInt64(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
+    }
+    @Override
+    public void writeSInt64NoTag(long value) throws IOException {
+      requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
+      writeSInt64(value);
     }
 
     @Override
@@ -1032,12 +1096,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeFixed64(value);
       writeTag(fieldNumber, WIRETYPE_FIXED64);
     }
+    @Override
+    public void writeFixed64NoTag(long value) throws IOException {
+      requireSpace(MAX_VARINT32_SIZE + FIXED64_SIZE);
+      writeFixed64(value);
+    }
 
     @Override
     public void writeBool(int fieldNumber, boolean value) throws IOException {
       requireSpace(MAX_VARINT32_SIZE + 1);
       write((byte) (value ? 1 : 0));
       writeTag(fieldNumber, WIRETYPE_VARINT);
+    }
+    @Override
+    public void writeBoolNoTag(boolean value) throws IOException {
+      requireSpace(MAX_VARINT32_SIZE + 1);
+      write((byte) (value ? 1 : 0));
     }
 
     @Override
@@ -1062,6 +1136,18 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       requireSpace(MAX_VARINT32_SIZE * 2);
       writeVarint32(value.size());
       writeTag(fieldNumber, WIRETYPE_LENGTH_DELIMITED);
+    }
+    @Override
+    public void writeBytesNoTag(ByteString value) throws IOException {
+      try {
+        value.writeToReverse(this);
+      } catch (IOException e) {
+        // Should never happen since the writer does not throw.
+        throw new RuntimeException(e);
+      }
+
+      requireSpace(MAX_VARINT32_SIZE * 2);
+      writeVarint32(value.size());
     }
 
     @Override
@@ -1528,12 +1614,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeVarint32(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
     }
+    @Override
+    public void writeUInt32NoTag(int value) {
+      requireSpace(MAX_VARINT32_SIZE * 2);
+      writeVarint32(value);
+    }
 
     @Override
     public void writeInt32(int fieldNumber, int value) {
       requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
       writeInt32(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
+    }
+    @Override
+    public void writeInt32NoTag(int value) {
+      requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
+      writeInt32(value);
     }
 
     @Override
@@ -1542,12 +1638,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeSInt32(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
     }
+    @Override
+    public void writeSInt32NoTag(int value) {
+      requireSpace(MAX_VARINT32_SIZE * 2);
+      writeSInt32(value);
+    }
 
     @Override
     public void writeFixed32(int fieldNumber, int value) {
       requireSpace(MAX_VARINT32_SIZE + FIXED32_SIZE);
       writeFixed32(value);
       writeTag(fieldNumber, WIRETYPE_FIXED32);
+    }
+    @Override
+    public void writeFixed32NoTag(int value) {
+      requireSpace(MAX_VARINT32_SIZE + FIXED32_SIZE);
+      writeFixed32(value);
     }
 
     @Override
@@ -1556,12 +1662,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeVarint64(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
     }
+    @Override
+    public void writeUInt64NoTag(long value) {
+      requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
+      writeVarint64(value);
+    }
 
     @Override
     public void writeSInt64(int fieldNumber, long value) {
       requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
       writeSInt64(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
+    }
+    @Override
+    public void writeSInt64NoTag(long value) {
+      requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
+      writeSInt64(value);
     }
 
     @Override
@@ -1570,12 +1686,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeFixed64(value);
       writeTag(fieldNumber, WIRETYPE_FIXED64);
     }
+    @Override
+    public void writeFixed64NoTag(long value) {
+      requireSpace(MAX_VARINT32_SIZE + FIXED64_SIZE);
+      writeFixed64(value);
+    }
 
     @Override
     public void writeBool(int fieldNumber, boolean value) {
       requireSpace(MAX_VARINT32_SIZE + 1);
       write((byte) (value ? 1 : 0));
       writeTag(fieldNumber, WIRETYPE_VARINT);
+    }
+    @Override
+    public void writeBoolNoTag(boolean value) {
+      requireSpace(MAX_VARINT32_SIZE + 1);
+      write((byte) (value ? 1 : 0));
     }
 
     @Override
@@ -1600,6 +1726,18 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       requireSpace(MAX_VARINT32_SIZE * 2);
       writeVarint32(value.size());
       writeTag(fieldNumber, WIRETYPE_LENGTH_DELIMITED);
+    }
+    @Override
+    public void writeBytesNoTag(ByteString value) {
+      try {
+        value.writeToReverse(this);
+      } catch (IOException e) {
+        // Should never happen since the writer does not throw.
+        throw new RuntimeException(e);
+      }
+
+      requireSpace(MAX_VARINT32_SIZE * 2);
+      writeVarint32(value.size());
     }
 
     @Override
@@ -2059,12 +2197,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeVarint32(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
     }
+    @Override
+    public void writeUInt32NoTag(int value) {
+      requireSpace(MAX_VARINT32_SIZE * 2);
+      writeVarint32(value);
+    }
 
     @Override
     public void writeInt32(int fieldNumber, int value) {
       requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
       writeInt32(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
+    }
+    @Override
+    public void writeInt32NoTag(int value) {
+      requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
+      writeInt32(value);
     }
 
     @Override
@@ -2073,12 +2221,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeSInt32(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
     }
+    @Override
+    public void writeSInt32NoTag(int value) {
+      requireSpace(MAX_VARINT32_SIZE * 2);
+      writeSInt32(value);
+    }
 
     @Override
     public void writeFixed32(int fieldNumber, int value) {
       requireSpace(MAX_VARINT32_SIZE + FIXED32_SIZE);
       writeFixed32(value);
       writeTag(fieldNumber, WIRETYPE_FIXED32);
+    }
+    @Override
+    public void writeFixed32NoTag(int value) {
+      requireSpace(MAX_VARINT32_SIZE + FIXED32_SIZE);
+      writeFixed32(value);
     }
 
     @Override
@@ -2087,12 +2245,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeVarint64(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
     }
+    @Override
+    public void writeUInt64NoTag(long value) {
+      requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
+      writeVarint64(value);
+    }
 
     @Override
     public void writeSInt64(int fieldNumber, long value) {
       requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
       writeSInt64(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
+    }
+    @Override
+    public void writeSInt64NoTag(long value) {
+      requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
+      writeSInt64(value);
     }
 
     @Override
@@ -2101,12 +2269,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeFixed64(value);
       writeTag(fieldNumber, WIRETYPE_FIXED64);
     }
+    @Override
+    public void writeFixed64NoTag(long value) {
+      requireSpace(MAX_VARINT32_SIZE + FIXED64_SIZE);
+      writeFixed64(value);
+    }
 
     @Override
     public void writeBool(int fieldNumber, boolean value) {
       requireSpace(MAX_VARINT32_SIZE + 1);
       write((byte) (value ? 1 : 0));
       writeTag(fieldNumber, WIRETYPE_VARINT);
+    }
+    @Override
+    public void writeBoolNoTag(boolean value) {
+      requireSpace(MAX_VARINT32_SIZE + 1);
+      write((byte) (value ? 1 : 0));
     }
 
     @Override
@@ -2131,6 +2309,18 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       requireSpace(MAX_VARINT32_SIZE * 2);
       writeVarint32(value.size());
       writeTag(fieldNumber, WIRETYPE_LENGTH_DELIMITED);
+    }
+    @Override
+    public void writeBytesNoTag(ByteString value) {
+      try {
+        value.writeToReverse(this);
+      } catch (IOException e) {
+        // Should never happen since the writer does not throw.
+        throw new RuntimeException(e);
+      }
+
+      requireSpace(MAX_VARINT32_SIZE * 2);
+      writeVarint32(value.size());
     }
 
     @Override
@@ -2619,12 +2809,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeVarint32(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
     }
+    @Override
+    public void writeUInt32NoTag(int value) {
+      requireSpace(MAX_VARINT32_SIZE * 2);
+      writeVarint32(value);
+    }
 
     @Override
     public void writeInt32(int fieldNumber, int value) {
       requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
       writeInt32(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
+    }
+    @Override
+    public void writeInt32NoTag(int value) {
+      requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
+      writeInt32(value);
     }
 
     @Override
@@ -2633,12 +2833,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeSInt32(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
     }
+    @Override
+    public void writeSInt32NoTag(int value) {
+      requireSpace(MAX_VARINT32_SIZE * 2);
+      writeSInt32(value);
+    }
 
     @Override
     public void writeFixed32(int fieldNumber, int value) {
       requireSpace(MAX_VARINT32_SIZE + FIXED32_SIZE);
       writeFixed32(value);
       writeTag(fieldNumber, WIRETYPE_FIXED32);
+    }
+    @Override
+    public void writeFixed32NoTag(int value) {
+      requireSpace(MAX_VARINT32_SIZE + FIXED32_SIZE);
+      writeFixed32(value);
     }
 
     @Override
@@ -2647,12 +2857,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeVarint64(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
     }
+    @Override
+    public void writeUInt64NoTag(long value) {
+      requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
+      writeVarint64(value);
+    }
 
     @Override
     public void writeSInt64(int fieldNumber, long value) {
       requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
       writeSInt64(value);
       writeTag(fieldNumber, WIRETYPE_VARINT);
+    }
+    @Override
+    public void writeSInt64NoTag(long value) {
+      requireSpace(MAX_VARINT32_SIZE + MAX_VARINT64_SIZE);
+      writeSInt64(value);
     }
 
     @Override
@@ -2661,12 +2881,22 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       writeFixed64(value);
       writeTag(fieldNumber, WIRETYPE_FIXED64);
     }
+    @Override
+    public void writeFixed64NoTag(long value) {
+      requireSpace(MAX_VARINT32_SIZE + FIXED64_SIZE);
+      writeFixed64(value);
+    }
 
     @Override
     public void writeBool(int fieldNumber, boolean value) {
       requireSpace(MAX_VARINT32_SIZE + 1);
       write((byte) (value ? 1 : 0));
       writeTag(fieldNumber, WIRETYPE_VARINT);
+    }
+    @Override
+    public void writeBoolNoTag(boolean value) {
+      requireSpace(MAX_VARINT32_SIZE + 1);
+      write((byte) (value ? 1 : 0));
     }
 
     @Override
@@ -2691,6 +2921,18 @@ abstract class BinaryWriter extends ByteOutput implements Writer {
       requireSpace(MAX_VARINT32_SIZE * 2);
       writeVarint32(value.size());
       writeTag(fieldNumber, WIRETYPE_LENGTH_DELIMITED);
+    }
+    @Override
+    public void writeBytesNoTag(ByteString value) {
+      try {
+        value.writeToReverse(this);
+      } catch (IOException e) {
+        // Should never happen since the writer does not throw.
+        throw new RuntimeException(e);
+      }
+
+      requireSpace(MAX_VARINT32_SIZE * 2);
+      writeVarint32(value.size());
     }
 
     @Override
