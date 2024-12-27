@@ -884,15 +884,39 @@ public abstract class BinaryWriter extends ByteOutput implements Writer {
    * {@link #complete()}.
    */
   public abstract int getTotalBytesWritten();
-
+  public abstract void nextBuffer(AllocatedBuffer allocatedBuffer);
   /**
-   * 调用此方法前，需要先调用{@link #finishCurrentBuffer()}
+   * 保留最后一个AllocatedBuffer在引用中，方便重用
+   * @return
+   * @throws IOException
    */
-  public void clear(){
-    this.totalDoneBytes = 0;
-    while (this.buffers.size()>1){
-      this.buffers.peekLast();
+  public byte[] toByteArray() throws IOException {
+    //将当前buffer写入完成
+    Queue<AllocatedBuffer> buffers = complete();
+
+    byte[] out = new byte[getTotalBytesWritten()];
+    int outPos = 0;
+    AllocatedBuffer lastBuffer = null;
+    while (true) {
+      AllocatedBuffer buffer = buffers.poll();//由于不断buffers.addFirst(allocatedBuffer);  因此poolFirst()
+      if (buffer == null) {
+        break;
+      }
+      lastBuffer = buffer;
+      int length = buffer.limit() - buffer.position();
+      System.arraycopy(buffer.array(), buffer.arrayOffset() + buffer.position(), out, outPos, length);
+      outPos += length;
     }
+    if (out.length != outPos) {
+      throw new IllegalArgumentException("serialize message size not valid!out.length:" + out.length + ",outPos:" + outPos);
+    }
+    if(null != lastBuffer){
+      //缓存最后一个buff
+      lastBuffer.clear();
+      nextBuffer(lastBuffer);
+    }
+    this.totalDoneBytes = 0;
+    return out;
   }
 
   abstract void requireSpace(int size);
@@ -986,7 +1010,8 @@ public abstract class BinaryWriter extends ByteOutput implements Writer {
       nextBuffer(newHeapBuffer(capacity));
     }
 
-    private void nextBuffer(AllocatedBuffer allocatedBuffer) {
+    @Override
+    public void nextBuffer(AllocatedBuffer allocatedBuffer) {
       if (!allocatedBuffer.hasArray()) {
         throw new RuntimeException("Allocator returned non-heap buffer");
       }
@@ -1577,7 +1602,8 @@ public abstract class BinaryWriter extends ByteOutput implements Writer {
       nextBuffer(newHeapBuffer(capacity));
     }
 
-    private void nextBuffer(AllocatedBuffer allocatedBuffer) {
+    @Override
+    public void nextBuffer(AllocatedBuffer allocatedBuffer) {
       if (!allocatedBuffer.hasArray()) {
         throw new RuntimeException("Allocator returned non-heap buffer");
       }
@@ -2144,7 +2170,8 @@ public abstract class BinaryWriter extends ByteOutput implements Writer {
       nextBuffer(newDirectBuffer(capacity));
     }
 
-    private void nextBuffer(AllocatedBuffer allocatedBuffer) {
+    @Override
+    public void nextBuffer(AllocatedBuffer allocatedBuffer) {
       if (!allocatedBuffer.hasNioBuffer()) {
         throw new RuntimeException("Allocated buffer does not have NIO buffer");
       }
@@ -2753,7 +2780,8 @@ public abstract class BinaryWriter extends ByteOutput implements Writer {
       nextBuffer(newDirectBuffer(capacity));
     }
 
-    private void nextBuffer(AllocatedBuffer allocatedBuffer) {
+    @Override
+    public void nextBuffer(AllocatedBuffer allocatedBuffer) {
       if (!allocatedBuffer.hasNioBuffer()) {
         throw new RuntimeException("Allocated buffer does not have NIO buffer");
       }
