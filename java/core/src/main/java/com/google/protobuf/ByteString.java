@@ -446,7 +446,7 @@ public abstract class ByteString implements Iterable<Byte>, Serializable {
    * Wraps the given bytes into a {@code ByteString}. Intended for internal only usage to force a
    * classload of ByteString before LiteralByteString.
    */
-  static ByteString wrap(byte[] bytes) {
+  public static ByteString wrap(byte[] bytes) {
     // TODO(dweis): Return EMPTY when bytes are empty to reduce allocations?
     return new LiteralByteString(bytes);
   }

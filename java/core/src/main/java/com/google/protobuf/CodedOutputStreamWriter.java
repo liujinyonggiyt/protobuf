@@ -69,55 +69,99 @@ final class CodedOutputStreamWriter implements Writer {
   public void writeSFixed32(int fieldNumber, int value) throws IOException {
     output.writeSFixed32(fieldNumber, value);
   }
+  @Override
+  public void writeSFixed32NoTag(int value) throws IOException {
+    output.writeSFixed32NoTag(value);
+  }
 
   @Override
   public void writeInt64(int fieldNumber, long value) throws IOException {
     output.writeInt64(fieldNumber, value);
+  }
+  @Override
+  public void writeInt64NoTag(long value) throws IOException {
+    output.writeInt64NoTag(value);
   }
 
   @Override
   public void writeSFixed64(int fieldNumber, long value) throws IOException {
     output.writeSFixed64(fieldNumber, value);
   }
+  @Override
+  public void writeSFixed64NoTag(long value) throws IOException {
+    output.writeSFixed64NoTag(value);
+  }
 
   @Override
   public void writeFloat(int fieldNumber, float value) throws IOException {
     output.writeFloat(fieldNumber, value);
+  }
+  @Override
+  public void writeFloatNoTag(float value) throws IOException {
+    output.writeFloatNoTag(value);
   }
 
   @Override
   public void writeDouble(int fieldNumber, double value) throws IOException {
     output.writeDouble(fieldNumber, value);
   }
+  @Override
+  public void writeDoubleNoTag(double value) throws IOException {
+    output.writeDoubleNoTag(value);
+  }
 
   @Override
   public void writeEnum(int fieldNumber, int value) throws IOException {
     output.writeEnum(fieldNumber, value);
+  }
+  @Override
+  public void writeEnumNoTag(int value) throws IOException {
+    output.writeEnumNoTag(value);
   }
 
   @Override
   public void writeUInt64(int fieldNumber, long value) throws IOException {
     output.writeUInt64(fieldNumber, value);
   }
+  @Override
+  public void writeUInt64NoTag(long value) throws IOException {
+    output.writeUInt64NoTag(value);
+  }
 
   @Override
   public void writeInt32(int fieldNumber, int value) throws IOException {
     output.writeInt32(fieldNumber, value);
+  }
+  @Override
+  public void writeInt32NoTag(int value) throws IOException {
+    output.writeInt32NoTag(value);
   }
 
   @Override
   public void writeFixed64(int fieldNumber, long value) throws IOException {
     output.writeFixed64(fieldNumber, value);
   }
+  @Override
+  public void writeFixed64NoTag(long value) throws IOException {
+    output.writeFixed64NoTag(value);
+  }
 
   @Override
   public void writeFixed32(int fieldNumber, int value) throws IOException {
     output.writeFixed32(fieldNumber, value);
   }
+  @Override
+  public void writeFixed32NoTag(int value) throws IOException {
+    output.writeFixed32NoTag(value);
+  }
 
   @Override
   public void writeBool(int fieldNumber, boolean value) throws IOException {
     output.writeBool(fieldNumber, value);
+  }
+  @Override
+  public void writeBoolNoTag(boolean value) throws IOException {
+    output.writeBoolNoTag(value);
   }
 
   @Override
@@ -129,20 +173,36 @@ final class CodedOutputStreamWriter implements Writer {
   public void writeBytes(int fieldNumber, ByteString value) throws IOException {
     output.writeBytes(fieldNumber, value);
   }
+  @Override
+  public void writeBytesNoTag(ByteString value) throws IOException {
+    output.writeBytesNoTag(value);
+  }
 
   @Override
   public void writeUInt32(int fieldNumber, int value) throws IOException {
     output.writeUInt32(fieldNumber, value);
+  }
+  @Override
+  public void writeUInt32NoTag(int value) throws IOException {
+    output.writeUInt32NoTag(value);
   }
 
   @Override
   public void writeSInt32(int fieldNumber, int value) throws IOException {
     output.writeSInt32(fieldNumber, value);
   }
+  @Override
+  public void writeSInt32NoTag(int value) throws IOException {
+    output.writeSInt32NoTag(value);
+  }
 
   @Override
   public void writeSInt64(int fieldNumber, long value) throws IOException {
     output.writeSInt64(fieldNumber, value);
+  }
+  @Override
+  public void writeSInt64NoTag(long value) throws IOException {
+    output.writeSInt64NoTag(value);
   }
 
   @Override

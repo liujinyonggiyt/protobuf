@@ -7,7 +7,7 @@
     <version>3.21.12</version>
   </parent>
 
-  <artifactId>protobuf-java-util</artifactId>
+  <artifactId>animal-protobuf-java-util</artifactId>
   <packaging>bundle</packaging>
 
   <name>Protocol Buffers [Util]</name>
@@ -16,7 +16,8 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>protobuf-java</artifactId>
+      <artifactId>animal-protobuf-java</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>

@@ -38,7 +38,7 @@ import java.nio.ByteBuffer;
  */
 @CheckReturnValue
 @ExperimentalApi
-abstract class BufferAllocator {
+public abstract class BufferAllocator {
   private static final BufferAllocator UNPOOLED =
       new BufferAllocator() {
         @Override

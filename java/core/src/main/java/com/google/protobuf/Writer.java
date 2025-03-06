@@ -37,7 +37,7 @@ import java.util.Map;
 /** A writer that performs serialization of protobuf message fields. */
 @ExperimentalApi
 @CheckReturnValue
-interface Writer {
+public interface Writer {
 
   /** The order in which the fields are written by a {@link Writer}. */
   enum FieldOrder {
@@ -53,51 +53,66 @@ interface Writer {
 
   /** Writes a field of type {@link FieldType#SFIXED32}. */
   void writeSFixed32(int fieldNumber, int value) throws IOException;
+  void writeSFixed32NoTag(int value) throws IOException;
 
   /** Writes a field of type {@link FieldType#INT64}. */
   void writeInt64(int fieldNumber, long value) throws IOException;
+  void writeInt64NoTag(long value) throws IOException;
 
   /** Writes a field of type {@link FieldType#SFIXED64}. */
   void writeSFixed64(int fieldNumber, long value) throws IOException;
+  void writeSFixed64NoTag(long value) throws IOException;
 
   /** Writes a field of type {@link FieldType#FLOAT}. */
   void writeFloat(int fieldNumber, float value) throws IOException;
+  void writeFloatNoTag(float value) throws IOException;
 
   /** Writes a field of type {@link FieldType#DOUBLE}. */
   void writeDouble(int fieldNumber, double value) throws IOException;
+  void writeDoubleNoTag(double value) throws IOException;
 
   /** Writes a field of type {@link FieldType#ENUM}. */
   void writeEnum(int fieldNumber, int value) throws IOException;
+  void writeEnumNoTag(int value) throws IOException;
 
   /** Writes a field of type {@link FieldType#UINT64}. */
   void writeUInt64(int fieldNumber, long value) throws IOException;
+  void writeUInt64NoTag(long value) throws IOException;
 
   /** Writes a field of type {@link FieldType#INT32}. */
   void writeInt32(int fieldNumber, int value) throws IOException;
+  void writeInt32NoTag(int value) throws IOException;
 
   /** Writes a field of type {@link FieldType#FIXED64}. */
   void writeFixed64(int fieldNumber, long value) throws IOException;
+  void writeFixed64NoTag(long value) throws IOException;
 
   /** Writes a field of type {@link FieldType#FIXED32}. */
   void writeFixed32(int fieldNumber, int value) throws IOException;
+  void writeFixed32NoTag(int value) throws IOException;
 
   /** Writes a field of type {@link FieldType#BOOL}. */
   void writeBool(int fieldNumber, boolean value) throws IOException;
+  void writeBoolNoTag(boolean value) throws IOException;
 
   /** Writes a field of type {@link FieldType#STRING}. */
   void writeString(int fieldNumber, String value) throws IOException;
 
   /** Writes a field of type {@link FieldType#BYTES}. */
   void writeBytes(int fieldNumber, ByteString value) throws IOException;
+  void writeBytesNoTag(ByteString value) throws IOException;
 
   /** Writes a field of type {@link FieldType#UINT32}. */
   void writeUInt32(int fieldNumber, int value) throws IOException;
+  void writeUInt32NoTag(int value) throws IOException;
 
   /** Writes a field of type {@link FieldType#SINT32}. */
   void writeSInt32(int fieldNumber, int value) throws IOException;
+  void writeSInt32NoTag(int value) throws IOException;
 
   /** Writes a field of type {@link FieldType#SINT64}. */
   void writeSInt64(int fieldNumber, long value) throws IOException;
+  void writeSInt64NoTag(long value) throws IOException;
 
   /** Writes a field of type {@link FieldType#MESSAGE}. */
   void writeMessage(int fieldNumber, Object value) throws IOException;
